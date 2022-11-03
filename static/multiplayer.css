@@ -1,0 +1,37 @@
+.evtbox {
+    background-color: #90caf95e;
+    max-width: 100vw;
+    max-height: 300px;
+    overflow-y: scroll;
+    border-radius: 10px;
+    padding: 5px;
+}
+.boxbox {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.cover-mask {
+    position: absolute;
+    z-index: 114;
+    background: #00000088;
+    width: 100000vw;
+    height: 100000vh;
+    left: 0;
+    top: 0;
+}
+.cover {
+    background: white;
+    position: absolute;
+    z-index: 114514;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: fit-content;
+    max-width: 100vw;
+    max-height: 70vh;
+    overflow-y: scroll;
+    border-radius: 20px;
+    padding: 4px;
+}

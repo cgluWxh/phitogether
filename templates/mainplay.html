@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<!--viewport-fit=cover:Fill the whole screen on iPhone X-->
+	<meta charset="utf-8" name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+	<title>Phi Together v{{ver}}i</title>
+	<!-- <link rel="manifest" href="./manifest.json"> -->
+	<link rel="stylesheet" href="/static/style.css?v=together{{ver}}">
+	<link rel="stylesheet" href="/static/utils/utils.css?v=together{{ver}}">
+	<link rel="stylesheet" href="/static/multiplayer.css?v=together{{ver}}">
+	<script defer src="/static/js/dateformat.js"></script>
+	<script defer src="/static/js/html2canvas.min.js"></script>
+	<script defer src="/static/js/vue.js"></script>
+	<script defer src="/static/multiplayer.js?v=together{{ver}}"></script>
+	<script defer src="/static/js/common.js?v=together{{ver}}"></script>
+	<script defer src="/static/js/simphi.js?v=together{{ver}}"></script>
+	<script defer src="/static/js/pec2json.js?v=together{{ver}}"></script>
+	<script defer src="/static/js/reader.js?v=together{{ver}}"></script>
+	<script defer src="/static/script.js?v=together{{ver}}"></script>
+	<script defer src="/static/utils/utils.js?v=together{{ver}}"></script>
+</head>
+<script>
+    var thisVersion="{{ver}}"
+</script>
+<body>
+	<div class="main" id="app" style="text-align: center;">
+	    <div id="playhide">
+	    <h1 class="title">Phi Together v{{ver}}i</h1>
+		<p class="info"></p>
+		<p class="profile" v-if="!isMulti">Code by lchzh3473.<br>Mod by cgluWxh.<br>谱面数据更新于{{chartLastUpdate}}<br>上传谱面和资源文件或将其打包成zip然后上传；<br>读取完成后调节相关参数，手机请先转至横屏，最后点击“播放”按钮。<br>播放时双击画面：左上角暂停；右上角重新开始；右下角全屏。</p>
+		<input type="button" id="multipanel" value="多人游戏面板" v-if="isMulti" v-on:click="openMultiPanel()">
+		<div class="cover-mask" v-if="panelOpen"></div>
+		<div class="cover" v-if="panelOpen">
+			<input type="button" id="close" v-on:click="panelOpen=false" v-if="panelChoice!=1" value="关闭"><br />
+			<div v-if="room.stage>0&&panelChoice!=1">
+				<input type="button" id="playerList" v-on:click="panelChoice=0" value="玩家列表">
+				<input type="button" id="playerGood1" v-on:click="showSmallStat()" value="玩家成绩（按曲）">
+				<input type="button" id="playerGood2" v-on:click="showBigStat()" value="玩家总排名&个人成绩汇总">
+			</div><br />
+			<div v-if="panelChoice==0">
+				<input type="button" id="lockRoom" v-on:click="lockRoom()" value="锁定房间并开始" v-if="owner&&room.stage===0">
+				<input type="button" id="exitRoom" v-on:click="exitRoom()" v-bind:value='owner?"关闭房间":"退出房间"' v-if="!exited">
+				<h1>玩家列表</h1>
+				<div class="boxbox" v-if="room&&room.players">
+					<div class="evtbox">
+						<p v-for="item,i in room.players">玩家 {{"{{"}}item.name{{"}}"}}<span v-if="item.exited">(已退出)</span> <span v-if="owner&&item.id!=user.id&&!item.exited" v-on:click="kickPlayer(item.id)">踢出</span></p>
+					</div>
+				</div>
+			</div>
+			<div v-if="panelChoice==1">
+				<h1 style="margin-top: -1em;">提示</h1>
+				<p v-for="item in alertMsg">{{"{{"}}item{{"}}"}}</p>
+				<p v-if="!chartLoaded&&room.stage>0">谱面未完成加载，请等待此消息消失后再点击开始。</p>
+				<input type="button" id="confirmAlert" v-on:click="alertFunc()" value='确定' style="font-size: 2em;">
+			</div>
+			<div v-if="panelChoice==2">
+				<input type="button" id="lockRoom" v-on:click="nextTrack()" value="下一首歌" v-if="owner&&room.stage===4&&!exited">
+				<input type="button" id="exitRoom" v-on:click="exitRoom()" v-bind:value='owner?"关闭房间并结算":"退出房间并结算"' v-if="!exited">
+				<input type="button" id="capture11" v-on:click="captureImage('capture1')" v-if="exited" value='生成本页成绩截图'>
+			    <div id="capture1">
+			        <div v-for="round,it in roundRanked">
+    					<h1 v-if="it==0 && !exited">本曲（第{{"{{"}}roundRanked.length-it{{"}}"}}首）成绩统计</h1>
+    					<h1 v-if="it!=0 || exited">第{{"{{"}}roundRanked.length-it{{"}}"}}首曲成绩统计</h1>
+    					<p>谱面 {{"{{"}}roundChartName[it]{{"}}"}}</p>
+    					<div class="boxbox">
+    						<div class="evtbox">
+    							<p v-for="item,i in round">第{{"{{"}}i+1{{"}}"}}名 玩家{{"{{"}}item.name{{"}}"}} 得分{{"{{"}}item.scoreStr{{"}}"}} Acc{{"{{"}}item.accStr{{"}}"}} {{"{{"}}item.extra{{"}}"}}</p>
+    						</div>
+    					</div>
+    				</div>
+    				由 Phi Together By lchzh3473 and cgluWxh 生成{{"{{"}}timeStr{{"}}"}}
+			    </div>
+			</div>
+			<div v-if="panelChoice==3">
+			    <input type="button" id="capture22" v-on:click="captureImage('capture2')" v-if="exited" value='生成本页成绩截图'>
+			    <div id="capture2">
+    				<h1>玩家综合排名</h1>
+    				<div class="boxbox">
+    					<div class="evtbox">
+    						<p v-for="item,i in rankedUser">第{{"{{"}}i+1{{"}}"}}名 玩家{{"{{"}}item.name{{"}}"}} 平均得分{{"{{"}}item.scoreAvg.toFixed(2){{"}}"}} 平均Acc{{"{{"}}(item.accAvg*100).toFixed(2){{"}}"}}%</p>
+    					</div>
+    				</div>
+    				<h1>我的游戏记录</h1>
+    				<div class="boxbox" v-if="room.players[user.id].playRecord">
+    					<div class="evtbox">
+    						<p v-for="item,i in room.players[user.id].playRecord">第{{"{{"}}i+1{{"}}"}}首 {{"{{"}}item.chartInfo.downlink.replace("/static/charts/","").replace(".zip",""){{"}}"}} 得分{{"{{"}}item.scoreStr{{"}}"}} Acc{{"{{"}}item.accStr{{"}}"}} {{"{{"}}item.extra{{"}}"}}</p>
+    					</div>
+    				</div>
+    				<div v-for="it1,t1 in room.players">
+    				    <div v-if="t1!=user.id&&it1.playRecord.length>0">
+    				        <h1>{{"{{"}}it1.name{{"}}"}} 的游戏记录</h1>
+            				<div class="boxbox" v-if="it1.playRecord">
+            					<div class="evtbox">
+            						<p v-for="item,i in it1.playRecord">第{{"{{"}}i+1{{"}}"}}首 {{"{{"}}item.chartInfo.downlink.replace("/static/charts/","").replace(".zip",""){{"}}"}} 得分{{"{{"}}item.scoreStr{{"}}"}} Acc{{"{{"}}item.accStr{{"}}"}} {{"{{"}}item.extra{{"}}"}}</p>
+            					</div>
+            				</div>
+    				    </div>
+    				</div>
+    				由 Phi Together By lchzh3473 and cgluWxh 生成{{"{{"}}timeStr{{"}}"}}
+    			</div>
+			</div>
+			<div v-if="panelChoice==9999">
+			    <input type="button" value="清空谱面缓存" onclick="caches.delete('PhiSim-Charts'),location.reload()">
+			    <input type="button" value="强制版本更新" onclick="caches.delete('PhiSim'),location.reload()">
+				<h1>缓存列表</h1>
+				<div class="boxbox">
+					<div class="evtbox">
+						<p v-for="item,i in cacheList">谱面{{"{{"}}i+1{{"}}"}} {{"{{"}}item.name{{"}}"}} <span v-on:click="deleteCache(item.url)">删除</span></p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="boxbox" v-if="isMulti">
+			<div class="evtbox">
+				<p v-for="item,i in evts">{{"{{"}}item.msg{{"}}"}}</p>
+			</div>
+		</div>
+		<div id="select3">
+			<select id="load-preset" style="width:15em">
+				{% for item in chartList %}
+					<option value="{{item.src}}">{{item.display}}</option>
+				{% endfor %}
+				<input type="button" id="demo" value="载入">
+				<div id="select4">
+					<input type="button" id="multi" v-on:click="startMultiUI()" value="多人游戏"><br />
+					<input type="button" value="管理谱面缓存" v-on:click="openCacheManage()"><br />
+					<div id="uploader" class="disabled">
+						<input type="button" id="uploader-upload" value="上传">
+						<div id="uploader-select">
+							<label id="uploader-file">上传文件</label>
+							<label id="uploader-dir">上传文件夹</label>
+						</div>
+					</div>
+					<!-- <input type="button" value="缓存" onclick="location.reload(true)"> -->
+					<input type="button" value="重置" onclick="location.reload(true)">
+				</div>
+		</div>
+		<div id="select" class="disabled">
+			<div id="select2">
+			<div>谱面：<select id="select-chart" style="width:6em"></select></div>
+			<div>音乐：<select id="select-bgm" style="width:6em"></select></div>
+			<div>图片：<select id="select-bg" style="width:6em"></select></div><br>
+			<div id="selectfzhide">
+			<div>宽高比：<select id="select-aspect-ratio" style="width:4em">
+					<option value="1.25">5:4</option>
+					<option value="1.333333">4:3</option>
+					<option value="1.428571">10:7</option>
+					<option value="1.461538">19:13</option>
+					<option value="1.6">8:5</option>
+					<option value="1.666667">5:3</option>
+					<option value="1.692308">22:13</option>
+					<option value="1.777778" selected>16:9</option>
+				</select>
+			</div>
+			<div>按键缩放：<select id="select-scale-ratio" style="width:4em">
+					<option value="0.8">极小</option>
+					<option value="0.9">较小</option>
+					<option value="1" selected>默认</option>
+					<option value="1.15">较大</option>
+					<option value="1.3">极大</option>
+				</select>
+			</div>
+			<div>背景变暗：<select id="select-global-alpha" style="width:4em">
+					<option value="1">黑暗</option>
+					<option value="0.8">昏暗</option>
+					<option value="0.6" selected>默认</option>
+					<option value="0.4">较亮</option>
+					<option value="0.2">明亮</option>
+				</select>
+			</div><br>
+			<div>歌名：<input id="input-name" class="input" style="width:7em" placeholder="Untitled"></div>
+			<div>等级：<input id="input-level" class="input" style="width:7em" placeholder="SP  Lv.?"></div><br>
+			<div>曲绘：<input id="input-illustrator" class="input" style="width:7em" placeholder="nameless"></div>
+			<div>谱师：<input id="input-designer" class="input" style="width:7em" placeholder="nameless"></div><br>
+			<div><input type="checkbox" id="closeAnim"><label for="closeAnim">为低性能设备关闭判定动画（慎用）</label></div>
+			<div><input type="checkbox" id="feedback" checked><label for="feedback">触摸反馈</label></div>
+			<div><input type="checkbox" id="imageBlur" checked><label for="imageBlur">背景模糊</label></div>
+			<div><input type="checkbox" id="highLight" checked><label for="highLight">多押高亮</label></div><br>
+			<div><input type="checkbox" id="showCE2"><label for="showCE2">Early/Late特效</label></div>
+			<div><input type="checkbox" id="hitSong" checked><label for="hitSong">开启打击音效</label></div>
+			<div><input type="checkbox" id="lineColor" checked><label for="lineColor">FC/AP指示器</label></div><br>
+			<div><input type="checkbox" id="showPoint"><label for="showPoint">显示定位点</label></div>
+			<div class="disabled-when-playing"><input type="checkbox" id="autoplay"><label for="autoplay">预览模式</label></div>
+			<div class="disabled-when-playing"><input type="checkbox" id="showTransition" checked><label for="showTransition">过渡动画</label></div><br>
+			<div class="">谱面镜像：<select id="select-flip" style="width:4em">
+					<option value="0" selected>无</option>
+					<option value="1">X轴</option>
+					<option value="2">Y轴</option>
+					<option value="3">X&Y</option>
+				</select>
+			</div>
+			<div class="disabled-when-playing">音乐变速：<select id="select-speed" style="width:4em">
+					<option value="Slowest">极慢</option>
+					<option value="Slower">较慢</option>
+					<option value="" selected>正常</option>
+					<option value="Faster">较快</option>
+					<option value="Fastest">极快</option>
+				</select>
+			</div></div></div><br>
+			<input type="button" v-on:click="doCalibrate()" value="自动延迟校准" v-if="!isMulti">
+			<div class="disabled-when-playing">谱面延时(ms)：<input id="input-offset" type="number" step="5" class="input" style="width:4em" placeholder="0"></div>
+			<div id="playpause">
+				<input type="button" id="btn-play" value="播放">
+				<input type="button" id="btn-pause" value="暂停">
+			</div>
+			<input type="button" v-on:click="syncChart()" value="就一起玩这张谱！" v-if="owner&&room.stage===1&&chartLoaded">
+			<input type="button" v-on:click="gameStart()" value="比赛开始！" v-if="owner&&room.stage===2">
+		</div>
+		<div><strong id="msg-out">初始化...</strong></div>
+		</div>
+		<div id="stage">
+		</div>
+		<div id="view-msg" style="display:none;"></div>
+	</div>
+	<noscript><strong style="color:red">此浏览器不支持JavaScript，该脚本无法运行。</strong></noscript>
+	<script>
+		navigator.serviceWorker.register('/sw.v2.js', { scope: '/' })
+		    .then(
+		        function(registration) {
+			        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+		        },
+		        function(err) {
+			        console.log('ServiceWorker registration failed: ', err);
+		        }
+		    );
+		</script>
+</body>
+
+</html>
