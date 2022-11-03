@@ -17,9 +17,11 @@ https://github.com/pallets/flask
 https://github.com/mozillazg/python-pinyin
 
 
-在此处特别感谢@lchzh3473 @Max3957 ！
+在此处特别感谢@lchzh3473 @Max3957 以及所有对此项目作出贡献的你们！
 
-本项目仓库 https://github.com/cgluWxh/phitogether ，使用 WTFPL(DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE) 协议开源
+本项目仓库 https://github.com/cgluWxh/phitogether （或许我闲得慌会更新，但目前没有已知bug，我也不想更新了<毕竟我用够用了qwq>），使用 WTFPL(DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE) 协议开源
+
+若有任何建议/意见欢迎提出（私信我就可以），我都会认真倾听，合理的我都会改进/改正！
 
 # Q&As
 ---
@@ -38,3 +40,6 @@ A：测试时是两个人玩三台设备，一台手机两台电脑，和up一�
 
 Q：为什么这个视频这么烂？
 A：up只花了大概一个小时乱剪完了这个视频，好吧，我再次道歉。嗯... 我果然还是不会剪片的awa
+
+Q：视频中泄漏了模拟器链接？
+A：视频中出现的网址为局域网条试地址哦！
