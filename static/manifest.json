@@ -1,0 +1,13 @@
+{
+	"name": "Phi Together",
+	"short_name": "Phitogether",
+	"theme_color": "#90caf9",
+	"background_color": "#90caf9",
+	"icons": [{
+		"src": "/static/lg300y300.png",
+		"sizes": "300x300",
+		"type": "image/png"
+	}],
+	"start_url": "/",
+	"display": "standalone"
+}

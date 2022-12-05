@@ -54,6 +54,18 @@ self.addEventListener('fetch',async function(e){
         })
       })
     );
+  } else if (url.indexOf("/static/js/zip.js")>-1) {
+      //特判zip.js
+      e.respondWith(caches.open("PhiSim")
+          .then((cache) =>  {
+            return cache.match("/static/js/zip.js").then((response) => {
+              return response || fetch(e.request).then((response) => {
+                cache.put("/static/js/zip.js", response.clone());
+                return response;
+              });
+            })
+          })
+        );
   } else if(url.indexOf("/api/multi")>-1) {
     return;
   } else if(url.startsWith("http")) {
