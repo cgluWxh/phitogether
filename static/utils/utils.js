@@ -183,27 +183,5 @@ const Utils = {
 
 Utils.lazyload(function() {
 	const isStandAlone = navigator.standalone || self.matchMedia('(display-mode: standalone)').matches;
-	if(!localStorage.verify707) {
-	    alert("使用前必读！！！");
-	    alert("本页面所有内容未经授权，仅供cgluWxh个人使用，请在接下来的弹窗中输入密码来启用。如因破解扩散造成版权问题cgluWxh概不负责！");
-	    var showtime = function () {
-            var checkTime = function (i) {
-                if (i < 10) {
-                    i = "0" + i;
-                }
-                return i;
-            }
-            var nowdate = new Date();
-            var year = nowdate.getFullYear(),
-                month = checkTime(nowdate.getMonth() + 1),
-                date = checkTime(nowdate.getDate());
-            return ""+ year + month + date;
-        }
-        let pass=showtime().split("").reverse().join("")+new Date().getHours().toString();
-	    if(prompt("请输入授权码！")!=pass) {
-	        return;
-	    }
-	}
-	localStorage.verify707=true;
 	for (const i of document.querySelectorAll('.main')) i.style.display = 'block';
 });
